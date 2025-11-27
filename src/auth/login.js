@@ -1,107 +1,87 @@
-/*
-  Requirement: Add client-side validation to the login form.
+// Select elements
+const loginForm = document.getElementById("login-form");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const messageContainer = document.getElementById("message-container");
 
-  Instructions:
-  1. Link this file to your HTML using a <script> tag with the 'defer' attribute.
-     Example: <script src="login.js" defer></script>
-  
-  2. In your login.html, add a <div> element *after* the </fieldset> but
-     *before* the </form> closing tag. Give it an id="message-container".
-     This div will be used to display success or error messages.
-     Example: <div id="message-container"></div>
-  
-  3. Implement the JavaScript functionality as described in the TODO comments.
-*/
-
-// --- Element Selections ---
-// We can safely select elements here because 'defer' guarantees
-// the HTML document is parsed before this script runs.
-
-// TODO: Select the login form. (You'll need to add id="login-form" to the <form> in your HTML).
-
-// TODO: Select the email input element by its ID.
-
-// TODO: Select the password input element by its ID.
-
-// TODO: Select the message container element by its ID.
-
-// --- Functions ---
-
-/**
- * TODO: Implement the displayMessage function.
- * This function takes two arguments:
- * 1. message (string): The message to display.
- * 2. type (string): "success" or "error".
- *
- * It should:
- * 1. Set the text content of `messageContainer` to the `message`.
- * 2. Set the class name of `messageContainer` to `type`
- * (this will allow for CSS styling of 'success' and 'error' states).
- */
+// Display message
 function displayMessage(message, type) {
-  // ... your implementation here ...
+    messageContainer.textContent = message;
+    messageContainer.className = type;
 }
 
-/**
- * TODO: Implement the isValidEmail function.
- * This function takes one argument:
- * 1. email (string): The email string to validate.
- *
- * It should:
- * 1. Use a regular expression to check if the email format is valid.
- * 2. Return `true` if the email is valid (e.g., "test@example.com").
- * 3. Return `false` if the email is invalid (e.g., "test@", "test.com", "test@.com").
- *
- * A simple regex for this purpose is: /\S+@\S+\.\S+/
- */
+// Email validation
 function isValidEmail(email) {
-  // ... your implementation here ...
+    const regex = /\S+@\S+\.\S+/;
+    return regex.test(email);
 }
 
-/**
- * TODO: Implement the isValidPassword function.
- * This function takes one argument:
- * 1. password (string): The password string to validate.
- *
- * It should:
- * 1. Check if the password length is 8 characters or more.
- * 2. Return `true` if the password is valid.
- * 3. Return `false` if the password is not valid.
- */
+// Password must be 8+ chars
 function isValidPassword(password) {
-  // ... your implementation here ...
+    return password.length >= 8;
 }
 
-/**
- * TODO: Implement the handleLogin function.
- * This function will be the event handler for the form's "submit" event.
- * It should:
- * 1. Prevent the form's default submission behavior.
- * 2. Get the `value` from `emailInput` and `passwordInput`, trimming any whitespace.
- * 3. Validate the email using `isValidEmail()`.
- * - If invalid, call `displayMessage("Invalid email format.", "error")` and stop.
- * 4. Validate the password using `isValidPassword()`.
- * - If invalid, call `displayMessage("Password must be at least 8 characters.", "error")` and stop.
- * 5. If both email and password are valid:
- * - Call `displayMessage("Login successful!", "success")`.
- * - (Optional) Clear the email and password input fields.
- */
-function handleLogin(event) {
-  // ... your implementation here ...
+// Login handler
+async function handleLogin(event) {
+    event.preventDefault();
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    // Validate email
+    if (!isValidEmail(email)) {
+        displayMessage("Invalid email format.", "error");
+        return;
+    }
+
+    // Validate password
+    if (!isValidPassword(password)) {
+        displayMessage("Password must be at least 8 characters.", "error");
+        return;
+    }
+
+    // Fetch student list
+    const response = await fetch("students.json");
+    const students = await response.json();
+
+    // 1️⃣ Check admin login
+    if (email === "admin@admin.com") {
+        displayMessage("Admin login successful!", "success");
+
+        setTimeout(() => {
+            window.location.href = "../admin/manage_users.html";
+        }, 1000);
+
+        return;
+    }
+
+    // 2️⃣ Check student login
+    const student = students.find(s => s.email === email);
+
+    if (!student) {
+        displayMessage("This email is not registered.", "error");
+        return;
+    }
+
+    // For phase 1: student password = student.id
+    if (password !== student.id) {
+        displayMessage("Incorrect password.", "error");
+        return;
+    }
+
+    // Success
+    displayMessage("Login successful!", "success");
+
+    setTimeout(() => {
+        window.location.href = "../index.html"; // student homepage
+    }, 1000);
 }
 
-/**
- * TODO: Implement the setupLoginForm function.
- * This function will be called once to set up the form.
- * It should:
- * 1. Check if `loginForm` exists.
- * 2. If it exists, add a "submit" event listener to it.
- * 3. The event listener should call the `handleLogin` function.
- */
+// Attach event
 function setupLoginForm() {
-  // ... your implementation here ...
+    if (loginForm) {
+        loginForm.addEventListener("submit", handleLogin);
+    }
 }
 
-// --- Initial Page Load ---
-// Call the main setup function to attach the event listener.
 setupLoginForm();
