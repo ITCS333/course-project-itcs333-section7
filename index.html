@@ -1,65 +1,52 @@
-<!--
-  Requirement: Create the Course Homepage
-
-  Instructions:
-  This page will serve as the main entry point to the course website.
-  It should contain a simple navigation menu with links to all the key pages.
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- TODO: Add the 'meta' tag for character encoding (UTF-8). -->
-    
-    <!-- TODO: Add the responsive 'viewport' meta tag. -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Development Course Homepage</title>
 
-    <!-- TODO: Add a title, e.g., "Web Dev Course Homepage". -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picocss@1.*/css/pico.min.css">
 
-    <!-- TODO: Link to your CSS framework or stylesheet. -->
+    <style>
+        body { padding: 2rem; }
+        nav ul { list-style: none; padding-left: 0; }
+        nav ul li { margin-bottom: 10px; }
+        nav a { font-size: 1.1rem; }
+    </style>
 </head>
 <body>
 
-    <!-- TODO: Create a 'header' with a main heading ('h1') like "Welcome to the Web Development Course". -->
+    <header>
+        <h1>Welcome to the Web Development Course</h1>
+        <p>Your central hub for course content, resources, and tools.</p>
+    </header>
 
-    <!-- TODO: Create the 'main' content area. -->
+    <main>
+        <section>
+            <h2>Site Navigation</h2>
 
-        <!-- TODO: Create a 'nav' element to hold the site navigation. -->
-            <!-- TODO: Add a sub-heading ('h2') "Site Navigation". -->
+            <nav>
+    <ul>
+        <!-- General -->
+        <li><a href="src/auth/login.html">Login</a></li>
 
-            <!-- TODO: Create an unordered list ('ul') to hold the links. -->
+        <!-- Admin Pages -->
+        <li><a href="src/admin/manage_users.html">Admin Portal (Manage Students)</a></li>
+        <li><a href="src/admin/resources/index.html">Admin: Manage Resources</a></li>
+        <li><a href="src/admin/weekly/index.html">Admin: Manage Weekly Breakdown</a></li>
+        <li><a href="src/admin/assignments/index.html">Admin: Manage Assignments</a></li>
 
-                <!-- Section: General -->
-                <!-- TODO: Add a list item ('li') with a link ('a') to the Login page.
-                     - Text: "Login" -->
+        <!-- Student Pages -->
+        <li><a href="src/resources/index.html">View Course Resources</a></li>
+        <li><a href="src/weekly/index.html">View Weekly Breakdown</a></li>
+        <li><a href="src/assignments/index.html">View Assignments</a></li>
+        <li><a href="src/discussion/index.html">General Discussion Board</a></li>
+    </ul>
+</nav>
 
-                <!-- Section: Admin Pages -->
-                <!-- TODO: Add a list item ('li') with a link ('a') to the Admin Portal.
-                     - Text: "Admin Portal (Manage Students)" -->
-                
-                <!-- TODO: Add a list item ('li') with a link ('a') to the Admin Resources page.
-                     - Text: "Admin: Manage Resources" -->
 
-                <!-- TODO: Add a list item ('li') with a link ('a') to the Admin Weekly Breakdown page.
-                     - Text: "Admin: Manage Weekly Breakdown" -->
+        </section>
+    </main>
 
-                <!-- TODO: Add a list item ('li') with a link ('a') to the Admin Assignments page.
-                     - Text: "Admin: Manage Assignments" -->
-
-                <!-- Section: Student Pages -->
-                <!-- TODO: Add a list item ('li') with a link ('a') to the Student Resources page.
-                     - Text: "View Course Resources" -->
-
-                <!-- TODO: Add a list item ('li') with a link ('a') to the Student Weekly Breakdown page.
-                     - Text: "View Weekly Breakdown" -->
-
-                <!-- TODO: Add a list item ('li') with a link ('a') to the Student Assignments page.
-                     - Text: "View Assignments" -->
-              
-                <!-- TODO: Add a list item ('li') with a link ('a') to the Discussion Board.
-                     - Text: "General Discussion Board" -->
-
-            <!-- End of the unordered list. -->
-        <!-- End of the 'nav' element. -->
-
-    <!-- End of 'main'. -->
 </body>
 </html>
