@@ -1,87 +1,34 @@
-// Select elements
-const loginForm = document.getElementById("login-form");
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const messageContainer = document.getElementById("message-container");
+document.getElementById("login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-// Display message
-function displayMessage(message, type) {
-    messageContainer.textContent = message;
-    messageContainer.className = type;
-}
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
 
-// Email validation
-function isValidEmail(email) {
-    const regex = /\S+@\S+\.\S+/;
-    return regex.test(email);
-}
-
-// Password must be 8+ chars
-function isValidPassword(password) {
-    return password.length >= 8;
-}
-
-// Login handler
-async function handleLogin(event) {
-    event.preventDefault();
-
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-
-    // Validate email
-    if (!isValidEmail(email)) {
-        displayMessage("Invalid email format.", "error");
+    if (!email || !password) {
+        alert("Please enter your email and password.");
         return;
     }
 
-    // Validate password
-    if (!isValidPassword(password)) {
-        displayMessage("Password must be at least 8 characters.", "error");
-        return;
-    }
+    try {
+        const response = await fetch("./api/index.php?action=login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
 
-    // Fetch student list
-    const response = await fetch("students.json");
-    const students = await response.json();
+        const data = await response.json();
+        console.log("API Response:", data);
 
-    // 1️⃣ Check admin login
-    if (email === "admin@admin.com") {
-        displayMessage("Admin login successful!", "success");
+        if (data.success) {
+            alert("Login successful!");
 
-        setTimeout(() => {
+            // FIXED REDIRECT — correct path to your admin page
             window.location.href = "../admin/manage_users.html";
-        }, 1000);
-
-        return;
+        } else {
+            alert(data.message || "Invalid email or password.");
+        }
+    } catch (error) {
+        console.error("Login error:", error);
+        alert("Server error. Try again later.");
     }
-
-    // 2️⃣ Check student login
-    const student = students.find(s => s.email === email);
-
-    if (!student) {
-        displayMessage("This email is not registered.", "error");
-        return;
-    }
-
-    // For phase 1: student password = student.id
-    if (password !== student.id) {
-        displayMessage("Incorrect password.", "error");
-        return;
-    }
-
-    // Success
-    displayMessage("Login successful!", "success");
-
-    setTimeout(() => {
-        window.location.href = "../index.html"; // student homepage
-    }, 1000);
-}
-
-// Attach event
-function setupLoginForm() {
-    if (loginForm) {
-        loginForm.addEventListener("submit", handleLogin);
-    }
-}
-
-setupLoginForm();
+});
