@@ -1,169 +1,199 @@
 <?php
-/**
- * Authentication Handler for Login Form
- * 
- * This PHP script handles user authentication via POST requests from the Fetch API.
- * It validates credentials against a MySQL database using PDO,
- * creates sessions, and returns JSON responses.
- */
+// 🔥 ADDED — allow session cookie for entire project
+session_set_cookie_params([
+    'path' => '/course-project-itcs333-section7/'
+]);
 
-// --- Session Management ---
-// TODO: Start a PHP session using session_start()
-// This must be called before any output is sent to the browser
-// Sessions allow us to store user data across multiple pages
+// 🔥 ADDED — start session
+session_start();
 
+header("Content-Type: application/json");
+require_once "Database.php";
 
-// --- Set Response Headers ---
-// TODO: Set the Content-Type header to 'application/json'
-// This tells the browser that we're sending JSON data back
+// Create DB connection
+$db = new Database();
+$conn = $db->getConnection();
 
+// Helper to send JSON response
+function sendResponse($success, $message = "", $data = null)
+{
+    echo json_encode([
+        "success" => $success,
+        "message" => $message,
+        "data"    => $data,
+    ]);
+    exit;
+}
 
-// TODO: (Optional) Set CORS headers if your frontend and backend are on different domains
-// You'll need headers for Access-Control-Allow-Origin, Methods, and Headers
+// Read action
+$action = $_GET["action"] ?? "";
 
+// Read JSON Body (POST / PUT actions)
+$input = json_decode(file_get_contents("php://input"), true);
 
-// --- Check Request Method ---
-// TODO: Verify that the request method is POST
-// Use the $_SERVER superglobal to check the REQUEST_METHOD
-// If the request is not POST, return an error response and exit
+// ------------------------------
+// 1) LOGIN
+// ------------------------------
+if ($action === "login") {
 
+    if (!$input || empty($input["email"]) || empty($input["password"])) {
+        sendResponse(false, "Missing email or password.");
+    }
 
-// --- Get POST Data ---
-// TODO: Retrieve the raw POST data
-// The Fetch API sends JSON data in the request body
-// Use file_get_contents with 'php://input' to read the raw request body
+    $email = $input["email"];
+    $password = $input["password"];
 
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+    $stmt->execute([$email]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// TODO: Decode the JSON data into a PHP associative array
-// Use json_decode with the second parameter set to true
+    if (!$user) {
+        sendResponse(false, "Email not found.");
+    }
 
+    if (!password_verify($password, $user["password"])) {
+        sendResponse(false, "Incorrect password.");
+    }
 
-// TODO: Extract the email and password from the decoded data
-// Check if both 'email' and 'password' keys exist in the array
-// If either is missing, return an error response and exit
+    // 🔥 ADDED — store login session
+    $_SESSION["user_id"] = $user["student_id"];
+    $_SESSION["role"] = $user["role"];
 
-
-// TODO: Store the email and password in variables
-// Trim any whitespace from the email
-
-
-// --- Server-Side Validation (Optional but Recommended) ---
-// TODO: Validate the email format on the server side
-// Use the appropriate filter function for email validation
-// If invalid, return an error response and exit
-
-
-// TODO: Validate the password length (minimum 8 characters)
-// If invalid, return an error response and exit
-
-
-// --- Database Connection ---
-// TODO: Get the database connection using the provided function
-// Assume getDBConnection() returns a PDO instance with error mode set to exception
-// The function is defined elsewhere (e.g., in a config file or db.php)
-
-
-// TODO: Wrap database operations in a try-catch block to handle PDO exceptions
-// This ensures you can return a proper JSON error response if something goes wrong
+    sendResponse(true, "Login successful!", [
+        "role" => $user["role"]
+    ]);
+}
 
 
-    // --- Prepare SQL Query ---
-    // TODO: Write a SQL SELECT query to find the user by email
-    // Select the following columns: id, name, email, password
-    // Use a WHERE clause to filter by email
-    // IMPORTANT: Use a placeholder (? or :email) for the email value
-    // This prevents SQL injection attacks
+// ------------------------------
+// 2) LOAD STUDENTS (GET)
+// ------------------------------
+if ($_SERVER["REQUEST_METHOD"] === "GET" && empty($action)) {
+
+    try {
+        $stmt = $conn->query("SELECT name, student_id, email FROM students");
+        $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        sendResponse(true, "Students loaded.", $students);
+
+    } catch (Exception $e) {
+        sendResponse(false, "Database error: " . $e->getMessage());
+    }
+}
 
 
-    // --- Prepare the Statement ---
-    // TODO: Prepare the SQL statement using the PDO prepare method
-    // Store the result in a variable
-    // Prepared statements protect against SQL injection
+// ------------------------------
+// 3) ADD STUDENT (POST)
+// ------------------------------
+if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($action)) {
+
+    if (!$input ||
+        empty($input["name"]) ||
+        empty($input["student_id"]) ||
+        empty($input["email"]) ||
+        empty($input["password"])) {
+
+        sendResponse(false, "Missing required student fields.");
+    }
+
+    $name = $input["name"];
+    $student_id = $input["student_id"];
+    $email = $input["email"];
+    $password = password_hash($input["password"], PASSWORD_DEFAULT);
+
+    try {
+        $stmt = $conn->prepare("
+            INSERT INTO students (name, student_id, email, password)
+            VALUES (?, ?, ?, ?)
+        ");
+        $stmt->execute([$name, $student_id, $email, $password]);
+
+        sendResponse(true, "Student added successfully.");
+
+    } catch (Exception $e) {
+        sendResponse(false, "Database error: " . $e->getMessage());
+    }
+}
 
 
-    // --- Execute the Query ---
-    // TODO: Execute the prepared statement with the email parameter
-    // Bind the email value to the placeholder
+// ------------------------------
+// 4) DELETE STUDENT (DELETE)
+// ------------------------------
+if ($_SERVER["REQUEST_METHOD"] === "DELETE") {
+
+    if (empty($_GET["student_id"])) {
+        sendResponse(false, "Missing student_id.");
+    }
+
+    $student_id = $_GET["student_id"];
+
+    try {
+        $stmt = $conn->prepare("DELETE FROM students WHERE student_id = ?");
+        $stmt->execute([$student_id]);
+
+        sendResponse(true, "Student deleted successfully.");
+
+    } catch (Exception $e) {
+        sendResponse(false, "Database error: " . $e->getMessage());
+    }
+}
 
 
-    // --- Fetch User Data ---
-    // TODO: Fetch the user record from the database
-    // Use the fetch method with PDO::FETCH_ASSOC
-    // This returns an associative array of the user data, or false if no user found
+// ------------------------------
+// 5) CHANGE PASSWORD
+// ------------------------------
+if ($action === "change_password") {
+
+    if (!isset($_SESSION["user_id"])) {
+        sendResponse(false, "You are not logged in.");
+    }
+
+    $student_id = $_SESSION["user_id"];
+
+    if (
+        !$input ||
+        empty($input["current_password"]) ||
+        empty($input["new_password"])
+    ) {
+        sendResponse(false, "Missing required fields.");
+    }
+
+    $current = $input["current_password"];
+    $new = $input["new_password"];
+
+    try {
+        // 🔥 USE USERS TABLE (not students)
+        $stmt = $conn->prepare("SELECT * FROM users WHERE student_id = ?");
+        $stmt->execute([$student_id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            sendResponse(false, "Admin not found.");
+        }
+
+        // Verify old password
+        if (!password_verify($current, $user["password"])) {
+            sendResponse(false, "Incorrect current password.");
+        }
+
+        // Hash new password
+        $newHash = password_hash($new, PASSWORD_DEFAULT);
+
+        // 🔥 UPDATE USERS TABLE
+        $update = $conn->prepare("UPDATE users SET password = ? WHERE student_id = ?");
+        $update->execute([$newHash, $student_id]);
+
+        sendResponse(true, "Password updated successfully.");
+
+    } catch (Exception $e) {
+        sendResponse(false, "Database error: " . $e->getMessage());
+    }
+}
 
 
-    // --- Verify User Exists and Password Matches ---
-    // TODO: Check if a user was found
-    // The fetch method returns false if no record matches
 
 
-    // TODO: If user exists, verify the password
-    // Use password_verify() to compare the submitted password with the hashed password from database
-    // This function returns true if they match, false otherwise
-    //
-    // NOTE: This assumes passwords are stored as hashes using password_hash()
-    // Never store passwords in plain text!
-
-
-    // --- Handle Successful Authentication ---
-    // TODO: If password verification succeeds:
-    
-    
-        // TODO: Store user information in session variables
-        // Store: user_id, user_name, user_email, logged_in
-        // DO NOT store the password in the session!
-
-
-        // TODO: Prepare a success response array
-        // Include:
-        // - 'success' => true
-        // - 'message' => 'Login successful'
-        // - 'user' => array with safe user details (id, name, email)
-        //
-        // IMPORTANT: Do NOT include the password in the response
-
-
-        // TODO: Encode the response array as JSON and echo it
-
-        
-        // TODO: Exit the script to prevent further execution
-
-
-    // --- Handle Failed Authentication ---
-    // TODO: If user doesn't exist OR password verification fails:
-    
-    
-        // TODO: Prepare an error response array
-        // Include:
-        // - 'success' => false
-        // - 'message' => 'Invalid email or password'
-        //
-        // SECURITY NOTE: Don't specify whether email or password was wrong
-        // This prevents attackers from enumerating valid email addresses
-
-
-        // TODO: Encode the error response as JSON and echo it
-        
-        
-        // TODO: Exit the script
-
-
-// TODO: Catch PDO exceptions in the catch block
-// Catch PDOException type
-
-
-    // TODO: Log the error for debugging
-    // Use error_log() to write the error message to the server error log
-    
-    
-    // TODO: Return a generic error message to the client
-    // DON'T expose database details to the user for security reasons
-    // Return a JSON response with success false and a generic message
-
-
-    // TODO: Exit the script
-
-
-// --- End of Script ---
-
-?>
+// ------------------------------
+// IF NOTHING MATCHED
+// ------------------------------
+sendResponse(false, "Invalid request.");
