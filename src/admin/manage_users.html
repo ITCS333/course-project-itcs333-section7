@@ -16,60 +16,68 @@ if (!isset($_SESSION["role"]) || $_SESSION["role"] !== "admin") {
 </head>
 <body>
 
-    <!-- REQUIRED HEADER FOR AUTOGRADER -->
+    <!-- HEADER REQUIRED BY AUTOGRADER -->
     <header class="container">
         <h1>Manage Users</h1>
     </header>
 
     <main class="container">
-        <h2>Change Your Password</h2>
 
-        <form id="passwordForm">
-            <label>Current Password</label>
-            <input type="password" id="currentPassword" required>
+        <!-- SECTION 1: CHANGE PASSWORD -->
+        <section>
+            <h2>Change Your Password</h2>
 
-            <label>New Password</label>
-            <input type="password" id="newPassword" minlength="8" required>
+            <form id="passwordForm">
+                <label>Current Password</label>
+                <input type="password" id="currentPassword" required>
 
-            <label>Confirm New Password</label>
-            <input type="password" id="confirmPassword" minlength="8" required>
+                <label>New Password</label>
+                <input type="password" id="newPassword" minlength="8" required>
 
-            <button type="submit">Update Password</button>
-        </form>
+                <label>Confirm New Password</label>
+                <input type="password" id="confirmPassword" minlength="8" required>
 
-        <hr>
-
-        <h2>Manage Students</h2>
-
-        <input type="hidden" id="originalStudentId">
-
-        <label>Name</label>
-        <input type="text" id="name" placeholder="Student Name">
-
-        <label>Student ID</label>
-        <input type="text" id="studentId" placeholder="Student ID">
-
-        <label>Email</label>
-        <input type="email" id="email" placeholder="Email">
-
-        <label>Default Password (For NEW Students)</label>
-        <input type="password" id="password" placeholder="Password">
-
-        <button id="addBtn" onclick="addStudent()">Add Student</button>
+                <button type="submit">Update Password</button>
+            </form>
+        </section>
 
         <hr>
 
-        <table role="grid">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Student ID</th>
-                    <th>Email</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="studentsTable"></tbody>
-        </table>
+        <!-- SECTION 2: MANAGE STUDENTS -->
+        <section>
+            <h2>Manage Students</h2>
+
+            <input type="hidden" id="originalStudentId">
+
+            <label>Name</label>
+            <input type="text" id="name" placeholder="Student Name">
+
+            <label>Student ID</label>
+            <input type="text" id="studentId" placeholder="Student ID">
+
+            <label>Email</label>
+            <input type="email" id="email" placeholder="Email">
+
+            <label>Default Password (For NEW Students)</label>
+            <input type="password" id="password" placeholder="Password">
+
+            <button id="addBtn" onclick="addStudent()">Add Student</button>
+
+            <hr>
+
+            <table role="grid">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Student ID</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsTable"></tbody>
+            </table>
+        </section>
+
     </main>
 
     <script src="manage_users.js?v=1000"></script>
