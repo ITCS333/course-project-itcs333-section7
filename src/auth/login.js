@@ -31,4 +31,14 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
         console.error("Login error:", error);
         alert("Server error. Try again later.");
     }
+    
 });
+
+function displayMessage(message, isError) {
+    const messageElement = document.getElementById("message");
+
+    if (!messageElement) return;
+
+    messageElement.textContent = message;
+    messageElement.style.color = isError ? "red" : "green";
+}
