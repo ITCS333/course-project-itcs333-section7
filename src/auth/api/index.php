@@ -1,5 +1,5 @@
 <?php
-// 🔥 ADDED — allow session cookie for entire project
+
 session_set_cookie_params([
     'path' => '/course-project-itcs333-section7/'
 ]);
@@ -28,7 +28,7 @@ function sendResponse($success, $message = "", $data = null)
 // Read action
 $action = $_GET["action"] ?? "";
 
-// Read JSON Body (POST / PUT actions)
+// Read JSON Body
 $input = json_decode(file_get_contents("php://input"), true);
 
 // ------------------------------
@@ -36,32 +36,44 @@ $input = json_decode(file_get_contents("php://input"), true);
 // ------------------------------
 if ($action === "login") {
 
-    if (!$input || empty($input["email"]) || empty($input["password"])) {
-        sendResponse(false, "Missing email or password.");
+    try {
+
+        if (!$input || empty($input["email"]) || empty($input["password"])) {
+            sendResponse(false, "Missing email or password.");
+        }
+
+        $email = $input["email"];
+        $password = $input["password"];
+
+      
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            sendResponse(false, "Invalid email format.");
+        }
+
+        $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            sendResponse(false, "Email not found.");
+        }
+
+        if (!password_verify($password, $user["password"])) {
+            sendResponse(false, "Incorrect password.");
+        }
+
+        $_SESSION["user_id"] = $user["student_id"];
+        $_SESSION["role"] = $user["role"];
+
+        sendResponse(true, "Login successful!", [
+            "role" => $user["role"]
+        ]);
+
     }
-
-    $email = $input["email"];
-    $password = $input["password"];
-
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$user) {
-        sendResponse(false, "Email not found.");
+    
+    catch (PDOException $e) {
+        sendResponse(false, "Database error.");
     }
-
-    if (!password_verify($password, $user["password"])) {
-        sendResponse(false, "Incorrect password.");
-    }
-
-    // 🔥 ADDED — store login session
-    $_SESSION["user_id"] = $user["student_id"];
-    $_SESSION["role"] = $user["role"];
-
-    sendResponse(true, "Login successful!", [
-        "role" => $user["role"]
-    ]);
 }
 
 
@@ -76,8 +88,8 @@ if ($_SERVER["REQUEST_METHOD"] === "GET" && empty($action)) {
 
         sendResponse(true, "Students loaded.", $students);
 
-    } catch (Exception $e) {
-        sendResponse(false, "Database error: " . $e->getMessage());
+    } catch (PDOException $e) {
+        sendResponse(false, "Database error.");
     }
 }
 
@@ -110,8 +122,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($action)) {
 
         sendResponse(true, "Student added successfully.");
 
-    } catch (Exception $e) {
-        sendResponse(false, "Database error: " . $e->getMessage());
+    } catch (PDOException $e) {
+        sendResponse(false, "Database error.");
     }
 }
 
@@ -133,8 +145,8 @@ if ($_SERVER["REQUEST_METHOD"] === "DELETE") {
 
         sendResponse(true, "Student deleted successfully.");
 
-    } catch (Exception $e) {
-        sendResponse(false, "Database error: " . $e->getMessage());
+    } catch (PDOException $e) {
+        sendResponse(false, "Database error.");
     }
 }
 
@@ -162,7 +174,7 @@ if ($action === "change_password") {
     $new = $input["new_password"];
 
     try {
-        // 🔥 USE USERS TABLE (not students)
+
         $stmt = $conn->prepare("SELECT * FROM users WHERE student_id = ?");
         $stmt->execute([$student_id]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -171,26 +183,23 @@ if ($action === "change_password") {
             sendResponse(false, "Admin not found.");
         }
 
-        // Verify old password
         if (!password_verify($current, $user["password"])) {
             sendResponse(false, "Incorrect current password.");
         }
 
-        // Hash new password
         $newHash = password_hash($new, PASSWORD_DEFAULT);
 
-        // 🔥 UPDATE USERS TABLE
-        $update = $conn->prepare("UPDATE users SET password = ? WHERE student_id = ?");
+        $update = $conn->prepare(
+            "UPDATE users SET password = ? WHERE student_id = ?"
+        );
         $update->execute([$newHash, $student_id]);
 
         sendResponse(true, "Password updated successfully.");
 
-    } catch (Exception $e) {
-        sendResponse(false, "Database error: " . $e->getMessage());
+    } catch (PDOException $e) {
+        sendResponse(false, "Database error.");
     }
 }
-
-
 
 
 // ------------------------------
