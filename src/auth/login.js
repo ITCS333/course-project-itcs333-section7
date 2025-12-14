@@ -39,6 +39,32 @@ function displayMessage(message, isError) {
 
     if (!messageElement) return;
 
+function handleLogin(event) {
+    event.preventDefault();
+}
+
+// TASK1205
+function setupLoginForm() {
+    const form = document.getElementById("login-form");
+    if (!form) return;
+
+    form.addEventListener("submit", handleLogin);
+}
+
+
+// TASK1202
+function isValidEmail(email) {
+    return typeof email === "string" && email.includes("@");
+}
+
+// TASK1203
+function isValidPassword(password) {
+    return typeof password === "string" && password.length >= 8;
+}
+
+
     messageElement.textContent = message;
     messageElement.style.color = isError ? "red" : "green";
 }
+// TASK1206
+setupLoginForm();
